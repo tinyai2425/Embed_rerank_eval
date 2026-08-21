@@ -3,7 +3,6 @@ pandas
 numpy
 scipy
 pyarrow
-pytrec_eval
 transformers
 openpyxl
 requests

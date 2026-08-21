@@ -1,6 +1,49 @@
+import math
 from typing import Dict, List, Optional, Tuple
 
-import pytrec_eval
+
+def _dcg(rels: List[float], k: int) -> float:
+    """trec_eval / pytrec_eval ndcg_cut: (2^rel - 1) / log2(rank + 1)."""
+    dcg = 0.0
+    for i, rel in enumerate(rels[:k], start=1):
+        if rel <= 0:
+            continue
+        dcg += (2.0 ** rel - 1.0) / math.log2(i + 1)
+    return dcg
+
+
+def _ndcg_at_k(ranked_ids: List[str], qrel: Dict[str, int], k: int) -> float:
+    gains = [float(qrel.get(doc_id, 0)) for doc_id in ranked_ids[:k]]
+    ideal = sorted((float(v) for v in qrel.values()), reverse=True)
+    ideal_dcg = _dcg(ideal, k)
+    if ideal_dcg == 0.0:
+        return 0.0
+    return _dcg(gains, k) / ideal_dcg
+
+
+def _average_precision_at_k(ranked_ids: List[str], relevant: set, k: int) -> float:
+    """trec_eval map_cut: divide by total relevant count, not min(R, k)."""
+    if not relevant:
+        return 0.0
+    hit = 0
+    ap_sum = 0.0
+    for i, doc_id in enumerate(ranked_ids[:k], start=1):
+        if doc_id in relevant:
+            hit += 1
+            ap_sum += hit / i
+    return ap_sum / len(relevant)
+
+
+def _recall_at_k(ranked_ids: List[str], relevant: set, k: int) -> float:
+    if not relevant:
+        return 0.0
+    return sum(1 for doc_id in ranked_ids[:k] if doc_id in relevant) / len(relevant)
+
+
+def _precision_at_k(ranked_ids: List[str], relevant: set, k: int) -> float:
+    if k <= 0:
+        return 0.0
+    return sum(1 for doc_id in ranked_ids[:k] if doc_id in relevant) / k
 
 
 def mrr(
@@ -126,28 +169,32 @@ class EvaluateRetrieval:
         recall = {f"Recall@{k}": 0.0 for k in k_values}
         precision = {f"P@{k}": 0.0 for k in k_values}
 
-        map_string = "map_cut." + ",".join([str(k) for k in k_values])
-        ndcg_string = "ndcg_cut." + ",".join([str(k) for k in k_values])
-        recall_string = "recall." + ",".join([str(k) for k in k_values])
-        precision_string = "P." + ",".join([str(k) for k in k_values])
+        k_max = max(k_values)
+        eval_qids = [qid for qid in results if qid in qrels]
+        if not eval_qids:
+            raise ValueError("No overlapping query ids between qrels and results.")
 
-        evaluator = pytrec_eval.RelevanceEvaluator(
-            qrels, {map_string, ndcg_string, recall_string, precision_string}
-        )
-        scores = evaluator.evaluate(results)
-
-        for query_id in scores.keys():
+        for query_id in eval_qids:
+            qrel = qrels[query_id]
+            relevant = {doc_id for doc_id, rel in qrel.items() if rel > 0}
+            ranked_ids = [
+                doc_id
+                for doc_id, _ in sorted(
+                    results[query_id].items(), key=lambda item: item[1], reverse=True
+                )[:k_max]
+            ]
             for k in k_values:
-                ndcg[f"NDCG@{k}"] += scores[query_id]["ndcg_cut_" + str(k)]
-                _map[f"MAP@{k}"] += scores[query_id]["map_cut_" + str(k)]
-                recall[f"Recall@{k}"] += scores[query_id]["recall_" + str(k)]
-                precision[f"P@{k}"] += scores[query_id]["P_" + str(k)]
+                ndcg[f"NDCG@{k}"] += _ndcg_at_k(ranked_ids, qrel, k)
+                _map[f"MAP@{k}"] += _average_precision_at_k(ranked_ids, relevant, k)
+                recall[f"Recall@{k}"] += _recall_at_k(ranked_ids, relevant, k)
+                precision[f"P@{k}"] += _precision_at_k(ranked_ids, relevant, k)
 
+        n_queries = len(eval_qids)
         for k in k_values:
-            ndcg[f"NDCG@{k}"] = round(ndcg[f"NDCG@{k}"] / len(scores), 5)
-            _map[f"MAP@{k}"] = round(_map[f"MAP@{k}"] / len(scores), 5)
-            recall[f"Recall@{k}"] = round(recall[f"Recall@{k}"] / len(scores), 5)
-            precision[f"P@{k}"] = round(precision[f"P@{k}"] / len(scores), 5)
+            ndcg[f"NDCG@{k}"] = round(ndcg[f"NDCG@{k}"] / n_queries, 5)
+            _map[f"MAP@{k}"] = round(_map[f"MAP@{k}"] / n_queries, 5)
+            recall[f"Recall@{k}"] = round(recall[f"Recall@{k}"] / n_queries, 5)
+            precision[f"P@{k}"] = round(precision[f"P@{k}"] / n_queries, 5)
 
         return ndcg, _map, recall, precision
 
