@@ -1,0 +1,7 @@
+{
+  "model_name": "qwen3-rerank-0.6B",
+  "rerank_family": "qwen3",
+  "SEED": 99,
+  "TEMPERATURE": 0,
+  "maxGenTokens": 1
+}

@@ -1,0 +1,9 @@
+openai>=1.0.0
+pandas
+numpy
+scipy
+pyarrow
+pytrec_eval
+transformers
+openpyxl
+requests

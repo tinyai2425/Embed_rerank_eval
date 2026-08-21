@@ -1,0 +1,4 @@
+{
+  "model_name": "Qwen3-Embedding-0.6B",
+  "TOKENIZER_CONFIG_PATH": "/path/to/Qwen3-Embedding-0.6B"
+}

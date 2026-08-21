@@ -1,0 +1,62 @@
+我想在该目录下得到embedding模型和rerank模型的数据生成，GPU评估和API评估的完整代码，并包含简洁的readme文件。其实我的所有代码基本已经整理好，位于Ref文件夹里，只需要做一些整合和格式修改即可。原本的代码里可能掺杂着ceval或者其他的评估，现在精简只要rerank和embedding相关。并且新生成的代码主要位于3个目录，数据生成，GPU和API。每个目录下基本的名称要包含embed和rerank，这样我们才能将不同的模型区分开。对于embedding模型，GPU部分只需要STSB代码的评估和wiki原始结果的生成，代码已有。API里，也是包含STSB分析和与GPU的wiki结果相似度的对比，只是我希望是直接给出GPU结果的地址和API的结果的地址，然后在地址目录下生成GPU-API目录，把评估结果放里面。
+
+对于rerank，我原本应该只给出了GPU的结果，你需要帮我补齐API的数据生成和评估。之前因为API的格式没有明确。现在是想要基于这个格式：
+curl http://localhost:11434/v1/reranks -d '
+{
+  "model": "qwen3-rerank-0.6B",
+  "query": "什么是机器学习?",
+  "documents": [
+    "机器学习是人工智能的核心技术,通过数据训练模型来完成特定任务。"
+  ]
+}
+然后相应应该是按照这个格式：
+{
+  "id": "rerank-abc123",
+  "object": "list",
+  "data": [
+    {
+      "object": "reranking_result",
+      "index": 0,
+      "relevance_score": 0.9271
+    }
+  ],
+  "model": "qwen3-rerank-0.6B",
+  "usage": {
+    "prompt_tokens": 32,
+    "total_tokens": 32
+  }
+}
+
+然后embedding模型也是按照兼容open ai的格式，比如：
+curl http://localhost:11434/v1/embeddings -d '
+{
+  "model": "nomic-embed-text",
+  "input": "Why is the sky blue?",
+}
+
+{
+  "model": "nomic-embed-text",
+  "embeddings": [
+    [
+      0.010071029,
+      -0.0017594862,
+      0.05007221,
+      0.04692972,
+      "...",
+      0.008599704,
+      0.105441414,
+      -0.025878139,
+      0.12958129,
+      0.031952348
+    ]
+  ],
+  "total_duration": 26057868,
+  "load_duration": 6630074,
+  "prompt_eval_count": 6
+}
+
+对于rerank我希望GPU运行完后就在GPU结果目录里包含evaluation_results.md，而不是我还要运行2遍
+然后我这里的rerank模型特定是qwen3-rerank-0.6B，但或许未来我还会增加其他的rerank模型，这样处理方法或许就会有一些不一样。这样GPU的代码或许你目前可以给我带上qwen3的标签。未来我如果增加其他的模型，可能只需要对应增加一些.py文件就好，而不用整个目录重来。所以在代码里，特定的qewn3-0.6B的代码和通用处理的代码可以分开，这样以后我好加新的模型。
+而且其实对于API的结果，我们是根据通用的rerank模型设计接口，然后基于qwen3-0.6B做改造的。这样你合理分层后，这部分的代码可以直接用于API的数据处理。我们在GPU里做的sytem prompt以及instruct部分我们其实都相同地在API的部分做了，只是最后这部分我们写死，没有通过API接口暴露出来。
+
+然后数据集因为我放在公司的电脑里，所以我没办法移动到这里，你就默认数据位于本地的data_set里就行，我实际使用的时候会把数据补全。
