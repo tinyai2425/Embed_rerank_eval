@@ -27,14 +27,15 @@ def parse_args():
     if len(sys.argv) != 5:
         print("Usage: python Eval_GPU_embed_wiki.py <input_json_path> <ip> <port> <model_id>")
         sys.exit(1)
-    input_json_path = sys.argv[1]
-    ip = sys.argv[2]
+    args = [a.strip() for a in sys.argv[1:]]
+    input_json_path = args[0]
+    ip = args[1]
     try:
-        port = int(sys.argv[3])
+        port = int(args[2])
     except ValueError:
         print("[ERR] <port> must be an integer")
         sys.exit(1)
-    model_id = sys.argv[4]
+    model_id = args[3]
     return input_json_path, ip, port, model_id
 
 

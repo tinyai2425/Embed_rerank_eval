@@ -8,6 +8,5 @@ VLLM_PORT=8897
 VLLM_MODEL_ID="qwen3-reranker"
 K_VALUES="[5,10]"
 
-CMD="python GPU_run_rerank_qwen3.py \"$INPUT_JSON_PATH\" \"$VLLM_IP\" \"$VLLM_PORT\" \"$VLLM_MODEL_ID\" \"$K_VALUES\""
-echo "Executing: $CMD"
-eval $CMD
+echo "Executing: python GPU_run_rerank_qwen3.py \"$INPUT_JSON_PATH\" \"$VLLM_IP\" \"$VLLM_PORT\" \"$VLLM_MODEL_ID\" \"$K_VALUES\""
+python GPU_run_rerank_qwen3.py "$INPUT_JSON_PATH" "$VLLM_IP" "$VLLM_PORT" "$VLLM_MODEL_ID" "$K_VALUES"

@@ -35,8 +35,9 @@ def parse_args():
             "<input_json_path> <ip> <port> <model_id> [k_values]"
         )
         sys.exit(1)
-    k_values_str = sys.argv[5] if len(sys.argv) == 6 else "[5,10]"
-    return sys.argv[1], sys.argv[2], int(sys.argv[3]), sys.argv[4], k_values_str
+    args = [a.strip() for a in sys.argv[1:]]
+    k_values_str = args[4] if len(args) == 5 else "[5,10]"
+    return args[0], args[1], int(args[2]), args[3], k_values_str
 
 
 def convert_logprobs_to_serializable(logprobs):

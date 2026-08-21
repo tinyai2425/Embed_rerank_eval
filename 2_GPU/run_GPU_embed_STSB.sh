@@ -7,6 +7,5 @@ VLLM_PORT=8896
 VLLM_MODEL_ID="Qwen3-Embedding-0.6B"
 VERSION_FLAG=3
 
-CMD="python Eval_GPU_embed_STSB.py \"$INPUT_JSON_PATH\" \"$VLLM_IP\" \"$VLLM_PORT\" \"$VLLM_MODEL_ID\" \"$VERSION_FLAG\""
-echo "[RUN] $CMD"
-eval $CMD
+echo "[RUN] python Eval_GPU_embed_STSB.py \"$INPUT_JSON_PATH\" \"$VLLM_IP\" \"$VLLM_PORT\" \"$VLLM_MODEL_ID\" \"$VERSION_FLAG\""
+python Eval_GPU_embed_STSB.py "$INPUT_JSON_PATH" "$VLLM_IP" "$VLLM_PORT" "$VLLM_MODEL_ID" "$VERSION_FLAG"

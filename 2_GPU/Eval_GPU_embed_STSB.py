@@ -28,7 +28,8 @@ def parse_args():
     if len(sys.argv) != 6:
         print("Usage: python Eval_GPU_embed_STSB.py <input_json_path> <ip> <port> <model_id> <version_flag>")
         sys.exit(1)
-    return sys.argv[1], sys.argv[2], int(sys.argv[3]), sys.argv[4], int(sys.argv[5])
+    args = [a.strip() for a in sys.argv[1:]]
+    return args[0], args[1], int(args[2]), args[3], int(args[4])
 
 
 def parse_project_base_and_filename(input_json_path: str) -> Tuple[str, str]:
