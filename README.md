@@ -2,7 +2,7 @@
 
 从 `Ref/` 精简并重组后的 embedding / rerank 评测代码。只保留这两类模型，不再包含 ceval 等任务。
 
-数据集请放到本仓库的 `data_set/`（本机数据未随仓库移动，使用时自行补全）。评测产物写到 `model-eval-storage/<model_name>/project-N/`。
+数据集请放到本仓库的 `data_set/`（本机数据未随仓库移动，使用时自行补全）。用例和评估结果写到上一级目录的 `../model-eval-storage/<model_name>/project-N/`。
 
 ```
 data_set/C-MTEB/test-C-METB-STSB.parquet
