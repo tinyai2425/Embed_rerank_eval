@@ -3,5 +3,6 @@
   "rerank_family": "qwen3",
   "SEED": 99,
   "TEMPERATURE": 0,
-  "maxGenTokens": 1
+  "maxGenTokens": 1,
+  "TOKENIZER_CONFIG_PATH": "/path/to/Qwen3-Reranker-0.6B"
 }

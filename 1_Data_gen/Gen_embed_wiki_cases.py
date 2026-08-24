@@ -4,7 +4,11 @@
 Generate wiki embedding perf cases (GPU JSON + API JSONL).
 
 Usage:
-  python Gen_embed_wiki_cases.py <model_config.json> [MAX_CASES]
+  python Gen_embed_wiki_cases.py <model_config.json> [MAX_CASES] [TARGET_LENGTHS]
+
+  MAX_CASES: omit or 0 = full dataset
+  TARGET_LENGTHS: comma-separated token lengths, default 1000
+                  e.g. 1000   or  512,1024,2048
 
 Config must include model_name and TOKENIZER_CONFIG_PATH.
 """
@@ -24,7 +28,23 @@ from embed_utils import set_model_config
 from paths import data_set_dir, make_project_dir
 
 PARQUET_PATH = os.path.join(data_set_dir(), "WIKI_perf", "wiki_CN_ENG_merged.parquet")
-TARGET_LENGTHS = [1000]
+DEFAULT_TARGET_LENGTHS = [1000]
+
+
+def parse_target_lengths(raw: str):
+    parts = [p.strip() for p in str(raw).replace(";", ",").split(",") if p.strip()]
+    if not parts:
+        raise ValueError("TARGET_LENGTHS is empty")
+    lengths = []
+    for part in parts:
+        try:
+            n = int(part)
+        except ValueError:
+            raise ValueError(f"TARGET_LENGTHS must be integers, got {part!r}")
+        if n <= 0:
+            raise ValueError(f"Each target length must be > 0, got {n}")
+        lengths.append(n)
+    return lengths
 
 
 def json_safe(o):
@@ -70,19 +90,22 @@ def truncate_to_exact_tokens(tokenizer, text: str, target_tokens: int) -> str:
 
 
 def main():
-    if len(sys.argv) not in (2, 3):
-        print("Usage: python Gen_embed_wiki_cases.py <model_config.json> [MAX_CASES]")
+    if len(sys.argv) not in (2, 3, 4):
+        print("Usage: python Gen_embed_wiki_cases.py <model_config.json> [MAX_CASES] [TARGET_LENGTHS]")
         sys.exit(1)
 
     config_path = sys.argv[1]
     max_cases = None
-    if len(sys.argv) == 3:
+    if len(sys.argv) >= 3:
         try:
             max_cases = int(sys.argv[2])
             if max_cases <= 0:
                 max_cases = None
         except ValueError:
             raise ValueError("MAX_CASES must be an integer")
+    target_lengths = DEFAULT_TARGET_LENGTHS
+    if len(sys.argv) == 4:
+        target_lengths = parse_target_lengths(sys.argv[3])
 
     if not os.path.exists(config_path):
         raise FileNotFoundError(f"Config not found: {config_path}")
@@ -102,6 +125,7 @@ def main():
     project_name, project_path = make_project_dir(mp.model_name)
     print(f"PROJECT_NAME {project_name}")
     print(f"Full path to project dir: {project_path}")
+    print(f"TARGET_LENGTHS {target_lengths}")
 
     df = pd.read_parquet(PARQUET_PATH)
     need = {"text", "word_count", "source", "num_sources"}
@@ -121,7 +145,7 @@ def main():
     api_lines_all = []
     for i, row in iter_df.iterrows():
         raw_text = str(row["text"])
-        for length in TARGET_LENGTHS:
+        for length in target_lengths:
             cut_text = truncate_to_exact_tokens(tokenizer, raw_text, length)
             tc_name = f"{project_name}-perf-test-prefill-{length}-embedding-wiki-{i}"
             gpu_cases_all.append({
@@ -135,8 +159,13 @@ def main():
             })
 
     suffix = "ALL" if max_cases is None else str(len(iter_df))
-    gpu_json_path = os.path.join(project_path, f"{project_name}-perf-embedding-wiki-GPU-{suffix}.json")
-    api_jsonl_path = os.path.join(project_path, f"{project_name}-perf-embedding-wiki-API-{suffix}.jsonl")
+    len_tag = "L" + "_".join(str(x) for x in target_lengths)
+    gpu_json_path = os.path.join(
+        project_path, f"{project_name}-perf-embedding-wiki-GPU-{len_tag}-{suffix}.json"
+    )
+    api_jsonl_path = os.path.join(
+        project_path, f"{project_name}-perf-embedding-wiki-API-{len_tag}-{suffix}.jsonl"
+    )
 
     with open(gpu_json_path, "w", encoding="utf-8") as f:
         json.dump(gpu_cases_all, f, ensure_ascii=False, indent=2, default=json_safe)

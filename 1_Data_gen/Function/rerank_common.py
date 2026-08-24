@@ -7,7 +7,7 @@ System prompt / instruct are applied server-side and are not sent.
 """
 
 import pickle
-from typing import Any, Dict, List, Tuple
+from typing import Any, Dict, Iterable, List, Optional, Tuple
 
 mp = None
 
@@ -95,11 +95,12 @@ def generate_api_rerank_tests(
     project_name: str,
     dataset_path: str,
     max_query: int = 0,
+    pairs: Optional[Iterable[Tuple]] = None,
 ) -> List[Dict]:
+    if pairs is None:
+        pairs = iter_query_doc_pairs(dataset_path, max_query)
     all_cases: List[Dict] = []
-    for query_idx, qid, query_text, doc_idx, doc_id, doc_text, score in iter_query_doc_pairs(
-        dataset_path, max_query
-    ):
+    for query_idx, qid, query_text, doc_idx, doc_id, doc_text, score in pairs:
         testCaseName = f"{project_name}-Rerank-test-mixed-corpus-val-q{query_idx}-{doc_idx}"
         all_cases.append(
             create_api_rerank_test(

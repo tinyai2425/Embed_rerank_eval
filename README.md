@@ -27,14 +27,14 @@ pip install -r requirements.txt
 
 ## Embedding
 
-**1. 造数**（在 `1_Data_gen/`）
+**1. 造数**（在 `1_Data_gen/`，改 shell 变量后执行）
 
 ```bash
-python Gen_embed_STSB_cases.py configs/embed.example.json [MAX_CASES]
-python Gen_embed_wiki_cases.py configs/embed.example.json [MAX_CASES]
+bash run_gen_embed_STSB.sh
+bash run_gen_embed_wiki.sh
 ```
 
-wiki 造数需要配置里的 `TOKENIZER_CONFIG_PATH`。每个 project 会同时写出 GPU `.json` 和 API `.jsonl`。
+wiki 的截断长度在 `run_gen_embed_wiki.sh` 的 `TARGET_LENGTHS` 里改，例如 `1000` 或 `512,1024,2048`，不用改 Python。wiki 造数需要配置里的 `TOKENIZER_CONFIG_PATH`。每个 project 会同时写出 GPU `.json` 和 API `.jsonl`。
 
 **2. GPU**（在 `2_GPU/`）
 
@@ -64,10 +64,14 @@ GPU 侧按 Qwen3 的 chat + yes/no logprobs 造数和打分；API 侧走通用�
 **1. 造数**（在 `1_Data_gen/`）
 
 ```bash
-python Gen_rerank_cases.py configs/rerank_qwen3.example.json <MAX_query>
+bash run_gen_rerank.sh
 ```
 
 一次生成 GPU JSON（含 messages）和 API JSONL（仅 query/documents）。`rerank_family` 默认 `qwen3`。
+
+在 `run_gen_rerank.sh` 里改：
+- `MAX_QUERY`：取前多少条 query
+- `MAX_PROMPT_LEN`：按拼接后的完整 GPU prompt（system + instruct + query + document + chat template）筛长度；`0` 不限制，常用 `1024` / `8192`。大于 0 时需要配置里的 `TOKENIZER_CONFIG_PATH`。公共前缀只算一次 token，query/document 按 id 缓存。
 
 **2. GPU**（在 `2_GPU/`）
 
@@ -88,8 +92,8 @@ python Eval_API_rerank.py <out.txt> [k_values]
 
 ### 以后加新的 rerank 模型
 
-1. `1_Data_gen/Function/rerank_<family>.py`：GPU 用例格式（messages 等）
-2. 在 `Gen_rerank_cases.py` 的 `GPU_GENERATORS` 里注册
+1. `1_Data_gen/Function/rerank_<family>.py`：GPU 用例格式（messages 等），如需长度筛选再提供 PromptLengthCounter
+2. 在 `Gen_rerank_cases.py` 的 `GPU_GENERATORS`（以及可选的 `LENGTH_COUNTERS`）里注册
 3. `2_GPU/GPU_run_rerank_<family>.py` + 对应打分文件
 4. API 造数、采集、评估不用改（通用 `/v1/reranks`）
 
