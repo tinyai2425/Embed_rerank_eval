@@ -33,6 +33,8 @@ def build_qrels_and_run_from_qwen3_results(
         if not query_name or not corpus_name:
             continue
         qrels[query_name][corpus_name] = expect
-        if response:
+        if item.get("score") is not None:
+            run[query_name][corpus_name] = float(item["score"])
+        elif response:
             run[query_name][corpus_name] = calculate_score_from_response(response)
     return dict(qrels), dict(run)

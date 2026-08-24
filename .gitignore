@@ -5,3 +5,4 @@ __pycache__/
 Ref/
 Model_file/
 model_config/
+./*/*.sh

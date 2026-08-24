@@ -7,7 +7,7 @@ Usage:
   python GPU_run_rerank_qwen3.py <input_json_path> <ip> <port> <model_id> [k_values]
 
 Writes under the case file's sibling GPU/ directory:
-  <basename>_Rerank_Results.jsonl
+  <basename>_Rerank_Results.jsonl  (includes queryName, corpusName, expect, score, response)
   evaluation_results.md
 
 Add a new GPU_run_rerank_<family>.py for other rerank models; keep
@@ -25,7 +25,10 @@ import openai
 sys.path.append(os.path.join(os.path.dirname(os.path.abspath(__file__)), "Function"))
 
 from rerank_eval import evaluate_and_write_markdown, parse_k_values
-from rerank_qwen3_score import build_qrels_and_run_from_qwen3_results
+from rerank_qwen3_score import (
+    build_qrels_and_run_from_qwen3_results,
+    calculate_score_from_response,
+)
 
 
 def parse_args():
@@ -95,6 +98,7 @@ def parallel_fetch_rerank_results(test_cases, client, model_id):
                     "queryName": test.get("queryName", ""),
                     "corpusName": test.get("corpusName", ""),
                     "expect": test.get("expect", 0),
+                    "score": calculate_score_from_response(lp),
                     "response": lp,
                 })
             print(f"\rProcessed {i + 1}/{len(test_cases)} test cases", end="", flush=True)
