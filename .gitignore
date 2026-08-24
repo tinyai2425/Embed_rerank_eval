@@ -1,0 +1,7 @@
+# 总入口的运行结果，跟 1./2./3. 各自的 *_GPU_results 一样不入 git
+__pycache__/
+**/__pycache__/
+
+Ref/
+Model_file/
+model_config/
