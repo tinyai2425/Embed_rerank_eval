@@ -14,11 +14,14 @@ def _err(prefix: str, i: int, line: str) -> ValueError:
 
 
 def extract_relevance_scores(resp: Dict[str, Any]) -> List[float]:
-    data = resp.get("data")
-    if not isinstance(data, list) or not data:
-        raise ValueError(f"Response missing data[]; keys={list(resp.keys())}")
+    """Accept both {results: [...]} (actual API) and {data: [...]} (OpenAI-style)."""
+    items = resp.get("results")
+    if not isinstance(items, list) or not items:
+        items = resp.get("data")
+    if not isinstance(items, list) or not items:
+        raise ValueError(f"Response missing results[]/data[]; keys={list(resp.keys())}")
     indexed = []
-    for item in data:
+    for item in items:
         if not isinstance(item, dict) or "relevance_score" not in item:
             raise ValueError(f"Invalid reranking_result item: {item}")
         indexed.append((int(item.get("index", len(indexed))), float(item["relevance_score"])))
@@ -30,7 +33,7 @@ def parse_rerank_api_results(log_path: str) -> pd.DataFrame:
     """
     Each sample is 3 non-empty lines:
       1) request JSON (may include testCaseName / queryName / corpusName / expect)
-      2) response JSON with data[].relevance_score
+      2) response JSON with results[] or data[] (each has index + relevance_score)
       3) API_total_time: <float>
     """
     with open(log_path, "r", encoding="utf-8") as f:

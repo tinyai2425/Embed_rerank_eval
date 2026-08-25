@@ -1,0 +1,6 @@
+{"model": "Qwen3-Reranker-0.6B", "query": "心花怒放多少画", "documents": ["向左转向右转【笔画数】一共4个汉字，共计笔画：4+7+9+8=28画。心（4），花（7），怒（9），放（8），一共28。"], "testCaseName": "project-2-Rerank-test-mixed-corpus-val-q0-0", "queryName": "UT__1496", "corpusName": "UT__790ce4bade25e21700793ae9f34fbc06", "expect": 1}
+{"object":"list","model":"Qwen3-Reranker-0.6B","results":[{"index":0,"relevance_score":0.998217761516571}],"usage":{"prompt_tokens":131,"total_tokens":131}}
+API_total_time: 2.252556
+{"model": "Qwen3-Reranker-0.6B", "query": "心花怒放多少画", "documents": ["心花怒放心花怒放3.0万浏览 798做过心花怒放1.7万浏览 10做过心花怒放1.7万浏览 302做过鲜花怒放1.7万浏览 159做过怒放的花朵1.4万浏览 210做过放心油条65.0万浏览 2087做过放心油条3.7万浏览 49做过花儿绽放9204浏览自制放心油条87.3万浏览 1525做过愤怒的小菊花1.4万浏览 162做过延伸阅读南瓜饼别去外面买了,学会了3分钟做一大锅,0添加超营养!41.6万浏览3分钟学会虾的10种做法!益气滋阳助消化,学起来了~14.6万浏览秋分一碗汤,不用医生帮,一整年都少生病!6.1万浏览土鸡蛋比普通鸡蛋营养价值更高?原来这么多年我们都白吃鸡蛋了!9.0万浏览"], "testCaseName": "project-2-Rerank-test-mixed-corpus-val-q0-1", "queryName": "UT__1496", "corpusName": "UT__051d9470b9bc4ddcedacfb9498e18507", "expect": 0}
+{"object":"list","model":"Qwen3-Reranker-0.6B","results":[{"index":0,"relevance_score":0.993807017803192}],"usage":{"prompt_tokens":310,"total_tokens":310}}
+API_total_time: 1.223078
